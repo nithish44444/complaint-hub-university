@@ -15,6 +15,7 @@ import ComplaintsList from "./pages/ComplaintsList";
 import ComplaintForm from "./pages/ComplaintForm";
 import ComplaintDetail from "./pages/ComplaintDetail";
 import Analytics from "./pages/Analytics";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/complaints/new" element={<ComplaintForm />} />
               <Route path="/complaints/:id" element={<ComplaintDetail />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

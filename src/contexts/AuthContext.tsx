@@ -7,6 +7,8 @@ type User = {
   name: string;
   email: string;
   role: "student" | "admin" | "investigator";
+  age?: string;
+  department?: string;
 };
 
 type AuthContextType = {
@@ -14,6 +16,8 @@ type AuthContextType = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  updateProfile: (userData: User) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -103,6 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             name: foundUser.name,
             email: foundUser.email,
             role: foundUser.role || "student",
+            age: foundUser.age,
+            department: foundUser.department,
           };
           
           setUser(userToLogin);
@@ -184,6 +190,99 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateProfile = async (userData: User) => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update user in state
+      setUser(userData);
+      
+      // Update user in local storage
+      localStorage.setItem("udc_user", JSON.stringify(userData));
+      
+      // If this is a registered user, also update in registered users
+      const usersInStorage = localStorage.getItem("udc_registered_users");
+      if (usersInStorage) {
+        const registeredUsers = JSON.parse(usersInStorage);
+        const updatedUsers = registeredUsers.map((u: any) => 
+          u.id === userData.id ? { ...u, ...userData } : u
+        );
+        
+        localStorage.setItem("udc_registered_users", JSON.stringify(updatedUsers));
+      }
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "Something went wrong. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (!user) {
+        throw new Error("No user logged in");
+      }
+      
+      // For demo users, don't allow password changes
+      if (["admin-123", "student-123", "investigator-123"].includes(user.id)) {
+        toast({
+          title: "Cannot change password",
+          description: "Demo accounts cannot change passwords",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // For registered users, verify current password and update
+      const usersInStorage = localStorage.getItem("udc_registered_users");
+      if (usersInStorage) {
+        const registeredUsers = JSON.parse(usersInStorage);
+        const userIndex = registeredUsers.findIndex((u: any) => 
+          u.id === user.id && u.password === currentPassword
+        );
+        
+        if (userIndex >= 0) {
+          registeredUsers[userIndex].password = newPassword;
+          localStorage.setItem("udc_registered_users", JSON.stringify(registeredUsers));
+          
+          toast({
+            title: "Password updated",
+            description: "Your password has been updated successfully",
+          });
+        } else {
+          toast({
+            title: "Password change failed",
+            description: "Current password is incorrect",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Password change failed",
+        description: "Something went wrong. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("udc_user");
@@ -194,7 +293,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      register, 
+      updateProfile,
+      updatePassword,
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );

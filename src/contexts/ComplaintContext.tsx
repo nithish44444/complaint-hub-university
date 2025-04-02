@@ -1,6 +1,8 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthContext";
+import { useNotifications } from "./NotificationContext";
 
 export type ComplaintCategory = 
   | "academic_misconduct" 
@@ -130,6 +132,7 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     // Initialize with mock data
@@ -185,6 +188,13 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       setComplaints(updatedComplaints);
       localStorage.setItem("udc_complaints", JSON.stringify(updatedComplaints));
 
+      // Add notification for admins and investigators
+      addNotification(
+        "New Complaint Submitted",
+        `${user.name} has submitted a new complaint: "${title}"`,
+        "complaint_submitted"
+      );
+
       toast({
         title: "Complaint submitted",
         description: "Your complaint has been submitted successfully",
@@ -210,20 +220,32 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      let complaintToUpdate: Complaint | undefined;
+
       const updatedComplaints = complaints.map((complaint) => {
         if (complaint.id === id) {
-          return {
+          complaintToUpdate = {
             ...complaint,
             status,
             resolution: resolution || complaint.resolution,
             updatedAt: new Date().toISOString(),
           };
+          return complaintToUpdate;
         }
         return complaint;
       });
 
       setComplaints(updatedComplaints);
       localStorage.setItem("udc_complaints", JSON.stringify(updatedComplaints));
+
+      // If the complaint is resolved, create a notification
+      if (status === "resolved" && complaintToUpdate) {
+        addNotification(
+          "Complaint Resolved",
+          `Complaint "${complaintToUpdate.title}" has been resolved.`,
+          "complaint_resolved"
+        );
+      }
 
       toast({
         title: "Complaint updated",

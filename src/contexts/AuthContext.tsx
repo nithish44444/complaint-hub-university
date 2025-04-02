@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "./NotificationContext";
 
 type User = {
   id: string;
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     // Check if user is logged in
@@ -53,6 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         setUser(adminUser);
         localStorage.setItem("udc_user", JSON.stringify(adminUser));
+        
+        // Create login notification for admins and investigators
+        addNotification(
+          "Admin User Logged In",
+          `Admin User (admin@university.edu) has logged into the system.`,
+          "login"
+        );
+        
         toast({
           title: "Logged in successfully",
           description: `Welcome back, ${adminUser.name}!`,
@@ -69,6 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         setUser(studentUser);
         localStorage.setItem("udc_user", JSON.stringify(studentUser));
+        
+        // Create login notification for admins and investigators
+        addNotification(
+          "Student User Logged In",
+          `Student User (student@university.edu) has logged into the system.`,
+          "login"
+        );
+        
         toast({
           title: "Logged in successfully",
           description: `Welcome back, ${studentUser.name}!`,
@@ -85,6 +103,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         setUser(investigatorUser);
         localStorage.setItem("udc_user", JSON.stringify(investigatorUser));
+        
+        // Create login notification for admins and investigators
+        addNotification(
+          "Investigator User Logged In",
+          `Investigator User (investigator@university.edu) has logged into the system.`,
+          "login"
+        );
+        
         toast({
           title: "Logged in successfully",
           description: `Welcome back, ${investigatorUser.name}!`,
@@ -113,6 +139,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           setUser(userToLogin);
           localStorage.setItem("udc_user", JSON.stringify(userToLogin));
+          
+          // Create login notification for admins and investigators
+          addNotification(
+            `${userToLogin.name} Logged In`,
+            `${userToLogin.name} (${userToLogin.email}) has logged into the system.`,
+            "login"
+          );
           
           toast({
             title: "Logged in successfully",

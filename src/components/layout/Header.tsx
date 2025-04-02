@@ -26,9 +26,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const location = useLocation();
   const isMobile = useIsMobile();
 
@@ -78,16 +80,38 @@ const Header = () => {
                     </Link>
                   </SheetClose>
                   {user?.role === "admin" && (
-                    <SheetClose asChild>
-                      <Link
-                        to="/analytics"
-                        className={`udc-nav-link ${
-                          location.pathname === "/analytics" ? "active" : ""
-                        }`}
-                      >
-                        Analytics
-                      </Link>
-                    </SheetClose>
+                    <>
+                      <SheetClose asChild>
+                        <Link
+                          to="/analytics"
+                          className={`udc-nav-link ${
+                            location.pathname === "/analytics" ? "active" : ""
+                          }`}
+                        >
+                          Analytics
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          to="/users"
+                          className={`udc-nav-link ${
+                            location.pathname === "/users" ? "active" : ""
+                          }`}
+                        >
+                          Users
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          to="/settings"
+                          className={`udc-nav-link ${
+                            location.pathname === "/settings" ? "active" : ""
+                          }`}
+                        >
+                          Settings
+                        </Link>
+                      </SheetClose>
+                    </>
                   )}
                 </nav>
               </SheetContent>
@@ -109,7 +133,11 @@ const Header = () => {
             >
               <Link to="/notifications">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-university-gold" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </Link>
             </Button>
 

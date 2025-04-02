@@ -7,18 +7,23 @@ import {
   BarChart,
   Users,
   Settings,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { Badge } from "@/components/ui/badge";
 
 const NavItem = ({
   to,
   icon: Icon,
   children,
+  badge,
 }: {
   to: string;
   icon: any;
   children: React.ReactNode;
+  badge?: number;
 }) => {
   const location = useLocation();
   const isActive = location.pathname === to || 
@@ -36,12 +41,18 @@ const NavItem = ({
     >
       <Icon className="h-5 w-5" />
       <span>{children}</span>
+      {badge && badge > 0 && (
+        <Badge className="ml-auto bg-red-500 text-white">
+          {badge > 9 ? '9+' : badge}
+        </Badge>
+      )}
     </Link>
   );
 };
 
 const Sidebar = () => {
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const location = useLocation();
 
   if (!user) return null;
@@ -55,6 +66,9 @@ const Sidebar = () => {
           </NavItem>
           <NavItem to="/complaints" icon={FileText}>
             Complaints
+          </NavItem>
+          <NavItem to="/notifications" icon={Bell} badge={unreadCount}>
+            Notifications
           </NavItem>
           {user.role === "admin" && (
             <>

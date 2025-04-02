@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -41,7 +40,7 @@ const Users = () => {
     // Get registered users from localStorage
     const loadUsers = () => {
       const usersInStorage = localStorage.getItem("udc_registered_users");
-      const demoUsers = [
+      const demoUsers: RegisteredUser[] = [
         {
           id: "admin-123",
           name: "Admin User",
@@ -63,13 +62,13 @@ const Users = () => {
       ];
 
       if (usersInStorage) {
-        // Filter out password from users
+        // Filter out password from users and ensure role is properly typed
         const registeredUsers = JSON.parse(usersInStorage).map(
           (u: any) => ({
             id: u.id,
             name: u.name,
             email: u.email,
-            role: u.role || "student",
+            role: (u.role || "student") as "student" | "admin" | "investigator",
             age: u.age,
             department: u.department,
           })

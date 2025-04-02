@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "./AuthContext";
@@ -253,13 +252,14 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
 
       const updatedComplaints = complaints.map((complaint) => {
         if (complaint.id === id) {
-          return {
+          const updatedComplaint: Complaint = {
             ...complaint,
             assignedTo,
             assignedToName,
             status: "investigating",
             updatedAt: new Date().toISOString(),
           };
+          return updatedComplaint;
         }
         return complaint;
       });

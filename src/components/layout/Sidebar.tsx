@@ -70,7 +70,7 @@ const Sidebar = () => {
           <NavItem to="/notifications" icon={Bell} badge={unreadCount}>
             Notifications
           </NavItem>
-          {user.role === "admin" && (
+          {(user.role === "admin" || user.role === "investigator") && (
             <>
               <NavItem to="/analytics" icon={BarChart}>
                 Analytics

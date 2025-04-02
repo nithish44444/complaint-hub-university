@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For demo, we'll hardcode some users
+      // First check demo accounts
       if (email === "admin@university.edu" && password === "password") {
         const adminUser: User = {
           id: "admin-123",
@@ -53,7 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Logged in successfully",
           description: `Welcome back, ${adminUser.name}!`,
         });
-      } else if (email === "student@university.edu" && password === "password") {
+        return;
+      } 
+      
+      if (email === "student@university.edu" && password === "password") {
         const studentUser: User = {
           id: "student-123",
           name: "Student User",
@@ -66,7 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Logged in successfully",
           description: `Welcome back, ${studentUser.name}!`,
         });
-      } else if (email === "investigator@university.edu" && password === "password") {
+        return;
+      } 
+      
+      if (email === "investigator@university.edu" && password === "password") {
         const investigatorUser: User = {
           id: "investigator-123",
           name: "Investigator User",
@@ -79,13 +85,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Logged in successfully",
           description: `Welcome back, ${investigatorUser.name}!`,
         });
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
+        return;
       }
+      
+      // Then check registered users
+      const usersInStorage = localStorage.getItem("udc_registered_users");
+      
+      if (usersInStorage) {
+        const registeredUsers = JSON.parse(usersInStorage);
+        const foundUser = registeredUsers.find((u: any) => 
+          u.email === email && u.password === password
+        );
+        
+        if (foundUser) {
+          const userToLogin: User = {
+            id: foundUser.id,
+            name: foundUser.name,
+            email: foundUser.email,
+            role: foundUser.role || "student",
+          };
+          
+          setUser(userToLogin);
+          localStorage.setItem("udc_user", JSON.stringify(userToLogin));
+          
+          toast({
+            title: "Logged in successfully",
+            description: `Welcome back, ${userToLogin.name}!`,
+          });
+          return;
+        }
+      }
+      
+      // If we get here, login failed
+      toast({
+        title: "Login failed",
+        description: "Invalid email or password",
+        variant: "destructive",
+      });
     } catch (error) {
       toast({
         title: "Login failed",
@@ -103,16 +139,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Create a new user ID
+      const userId = `user-${Date.now()}`;
+      
       // For demo purposes, we'll create a student user
       const newUser: User = {
-        id: `user-${Date.now()}`,
+        id: userId,
         name,
         email,
         role: "student",
       };
       
+      // Store user with password for demo authentication
+      const userWithPassword = {
+        ...newUser,
+        password,
+      };
+      
+      // Save to local storage for demo persistence
+      const usersInStorage = localStorage.getItem("udc_registered_users");
+      const existingUsers = usersInStorage ? JSON.parse(usersInStorage) : [];
+      
+      localStorage.setItem(
+        "udc_registered_users", 
+        JSON.stringify([...existingUsers, userWithPassword])
+      );
+      
+      // Log in the user
       setUser(newUser);
       localStorage.setItem("udc_user", JSON.stringify(newUser));
+      
       toast({
         title: "Registration successful",
         description: `Welcome, ${name}!`,

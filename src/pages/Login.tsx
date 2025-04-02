@@ -36,7 +36,11 @@ const Login = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await login(values.email, values.password);
+    try {
+      await login(values.email, values.password);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   if (user) {

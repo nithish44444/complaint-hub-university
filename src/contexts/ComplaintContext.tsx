@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthContext";
@@ -18,6 +17,13 @@ export type ComplaintStatus =
   | "resolved" 
   | "rejected";
 
+export type TrackingUpdate = {
+  date: string;
+  status: ComplaintStatus;
+  comment?: string;
+  updatedBy?: string;
+};
+
 export type Complaint = {
   id: string;
   title: string;
@@ -31,6 +37,7 @@ export type Complaint = {
   createdAt: string;
   updatedAt: string;
   resolution?: string;
+  trackingHistory?: TrackingUpdate[];
 };
 
 type ComplaintContextType = {
@@ -45,7 +52,8 @@ type ComplaintContextType = {
   updateComplaintStatus: (
     id: string,
     status: ComplaintStatus,
-    resolution?: string
+    resolution?: string,
+    comment?: string
   ) => Promise<void>;
   assignComplaint: (
     id: string, 
@@ -72,6 +80,19 @@ const MOCK_COMPLAINTS: Complaint[] = [
     assignedToName: "Investigator User",
     createdAt: "2023-06-15T10:30:00Z",
     updatedAt: "2023-06-16T14:20:00Z",
+    trackingHistory: [
+      {
+        date: "2023-06-15T10:30:00Z",
+        status: "pending",
+        comment: "Complaint filed"
+      },
+      {
+        date: "2023-06-16T14:20:00Z",
+        status: "investigating",
+        comment: "Assigned to investigator",
+        updatedBy: "admin-123"
+      }
+    ]
   },
   {
     id: "c-002",
@@ -97,6 +118,19 @@ const MOCK_COMPLAINTS: Complaint[] = [
     createdAt: "2023-05-06T11:45:00Z",
     updatedAt: "2023-05-20T16:30:00Z",
     resolution: "After investigation, professor was required to attend sensitivity training and has issued an apology to the class.",
+    trackingHistory: [
+      {
+        date: "2023-05-06T11:45:00Z",
+        status: "pending",
+        comment: "Complaint filed"
+      },
+      {
+        date: "2023-05-20T16:30:00Z",
+        status: "resolved",
+        comment: "Resolution issued",
+        updatedBy: "investigator-123"
+      }
+    ]
   },
   {
     id: "c-004",
@@ -111,6 +145,19 @@ const MOCK_COMPLAINTS: Complaint[] = [
     createdAt: "2023-06-10T13:20:00Z",
     updatedAt: "2023-06-12T09:45:00Z",
     resolution: "Maintenance has replaced all defective equipment in the lab.",
+    trackingHistory: [
+      {
+        date: "2023-06-10T13:20:00Z",
+        status: "pending",
+        comment: "Complaint filed"
+      },
+      {
+        date: "2023-06-12T09:45:00Z",
+        status: "resolved",
+        comment: "Resolution issued",
+        updatedBy: "investigator-123"
+      }
+    ]
   },
   {
     id: "c-005",
@@ -124,6 +171,13 @@ const MOCK_COMPLAINTS: Complaint[] = [
     assignedToName: "Investigator User",
     createdAt: "2023-06-08T16:10:00Z",
     updatedAt: "2023-06-09T10:30:00Z",
+    trackingHistory: [
+      {
+        date: "2023-06-08T16:10:00Z",
+        status: "pending",
+        comment: "Complaint filed"
+      }
+    ]
   },
 ];
 
@@ -172,6 +226,8 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      const currentDate = new Date().toISOString();
+      
       const newComplaint: Complaint = {
         id: `c-${Date.now()}`,
         title,
@@ -180,8 +236,15 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
         status: "pending",
         submittedBy: user.id,
         submittedByName: user.name,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: currentDate,
+        updatedAt: currentDate,
+        trackingHistory: [
+          {
+            date: currentDate,
+            status: "pending",
+            comment: "Complaint submitted"
+          }
+        ]
       };
 
       const updatedComplaints = [...complaints, newComplaint];
@@ -213,7 +276,8 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
   const updateComplaintStatus = async (
     id: string,
     status: ComplaintStatus,
-    resolution?: string
+    resolution?: string,
+    comment?: string
   ) => {
     setIsLoading(true);
     try {
@@ -221,14 +285,28 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       let complaintToUpdate: Complaint | undefined;
+      const currentDate = new Date().toISOString();
 
       const updatedComplaints = complaints.map((complaint) => {
         if (complaint.id === id) {
+          // Create tracking update
+          const trackingUpdate: TrackingUpdate = {
+            date: currentDate,
+            status,
+            comment: comment || `Status updated to ${status}`,
+            updatedBy: user?.id
+          };
+          
+          // Update complaint with tracking history
           complaintToUpdate = {
             ...complaint,
             status,
             resolution: resolution || complaint.resolution,
-            updatedAt: new Date().toISOString(),
+            updatedAt: currentDate,
+            trackingHistory: [
+              ...(complaint.trackingHistory || []),
+              trackingUpdate
+            ]
           };
           return complaintToUpdate;
         }
@@ -272,14 +350,28 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      const currentDate = new Date().toISOString();
+
       const updatedComplaints = complaints.map((complaint) => {
         if (complaint.id === id) {
+          // Create tracking update
+          const trackingUpdate: TrackingUpdate = {
+            date: currentDate,
+            status: "investigating",
+            comment: `Assigned to ${assignedToName}`,
+            updatedBy: user?.id
+          };
+          
           const updatedComplaint: Complaint = {
             ...complaint,
             assignedTo,
             assignedToName,
             status: "investigating",
-            updatedAt: new Date().toISOString(),
+            updatedAt: currentDate,
+            trackingHistory: [
+              ...(complaint.trackingHistory || []),
+              trackingUpdate
+            ]
           };
           return updatedComplaint;
         }

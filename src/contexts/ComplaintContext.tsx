@@ -228,9 +228,10 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const currentDate = new Date().toISOString();
+      const complaintId = `c-${Date.now()}`;
       
       const newComplaint: Complaint = {
-        id: `c-${Date.now()}`,
+        id: complaintId,
         title,
         description,
         category,
@@ -252,24 +253,35 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       setComplaints(updatedComplaints);
       localStorage.setItem("udc_complaints", JSON.stringify(updatedComplaints));
 
-      // Add notification for admins and investigators only
+      // Add notification for student with tracking ID
       addNotification(
-        "New Complaint Submitted",
-        `${user.name} has submitted a new complaint: "${title}"`,
+        "Complaint Submitted",
+        `Your complaint has been submitted. Tracking ID: ${complaintId}`,
         "complaint_submitted",
-        "admin" // Target admins and investigators
+        "student",
+        complaintId
+      );
+      
+      // Add notification for admins and investigators
+      addNotification(
+        "New Complaint",
+        `New complaint received: "${title}"`,
+        "complaint_submitted",
+        "admin",
+        complaintId
       );
       
       addNotification(
-        "New Complaint Submitted",
-        `${user.name} has submitted a new complaint: "${title}"`,
+        "New Complaint",
+        `New complaint received: "${title}"`,
         "complaint_submitted",
-        "investigator" // Target admins and investigators
+        "investigator",
+        complaintId
       );
 
       toast({
         title: "Complaint submitted",
-        description: "Your complaint has been submitted successfully",
+        description: `Your complaint has been submitted. Tracking ID: ${complaintId}`,
       });
     } catch (error) {
       toast({
@@ -325,41 +337,38 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       setComplaints(updatedComplaints);
       localStorage.setItem("udc_complaints", JSON.stringify(updatedComplaints));
 
-      // If the complaint is updated, create notifications based on status and roles
+      // If the complaint is updated, create notifications based on status
       if (complaintToUpdate) {
-        // General update notification for the student who submitted the complaint
-        const statusMessage = status === "resolved" 
-          ? "has been resolved" 
-          : status === "investigating" 
-          ? "is now under investigation" 
-          : status === "rejected" 
-          ? "has been rejected" 
-          : "has been updated";
-
         // Notification for the student who submitted the complaint
-        addNotification(
-          `Complaint ${statusMessage}`,
-          `Your complaint "${complaintToUpdate.title}" ${statusMessage}${resolution ? `: ${resolution}` : ""}`,
-          status === "resolved" ? "complaint_resolved" : "complaint_submitted",
-          "student"
-        );
-
-        // For staff (admins and investigators)
-        const staffMessage = `Complaint "${complaintToUpdate.title}" by ${complaintToUpdate.submittedByName} ${statusMessage}`;
-        
-        // Only notify other staff if the current user is staff
-        if (user?.role === "admin" || user?.role === "investigator") {
+        if (status === "resolved") {
           addNotification(
-            `Complaint ${statusMessage}`,
-            staffMessage,
-            status === "resolved" ? "complaint_resolved" : "complaint_submitted",
-            user?.role === "admin" ? "investigator" : "admin"
+            "Complaint Resolved",
+            `Your complaint (ID: ${id}) has been resolved${resolution ? `: ${resolution}` : ""}`,
+            "complaint_resolved",
+            "student",
+            id
+          );
+        } else if (status === "investigating") {
+          addNotification(
+            "Complaint Under Investigation",
+            `Your complaint (ID: ${id}) is now being investigated`,
+            "complaint_investigating",
+            "student",
+            id
+          );
+        } else if (status === "rejected") {
+          addNotification(
+            "Complaint Rejected",
+            `Your complaint (ID: ${id}) has been rejected${resolution ? `: ${resolution}` : ""}`,
+            "complaint_resolved",
+            "student",
+            id
           );
         }
       }
 
       toast({
-        title: "Complaint updated",
+        title: `Complaint ${status}`,
         description: `Complaint status has been updated to ${status}`,
       });
     } catch (error) {
@@ -392,7 +401,7 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
           const trackingUpdate: TrackingUpdate = {
             date: currentDate,
             status: "investigating",
-            comment: `Assigned to ${assignedToName}`,
+            comment: `Assigned to investigator`,
             updatedBy: user?.id
           };
           
@@ -420,23 +429,25 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
         // Notification for the assigned investigator
         addNotification(
           "Complaint Assigned",
-          `You have been assigned to investigate complaint: "${complaintToUpdate.title}"`,
+          `You have been assigned complaint ID: ${id}`,
           "complaint_submitted",
-          "investigator"
+          "investigator",
+          id
         );
 
         // Notification for the student who submitted the complaint
         addNotification(
-          "Complaint Under Investigation",
-          `Your complaint "${complaintToUpdate.title}" is now under investigation by ${assignedToName}`,
-          "complaint_submitted",
-          "student"
+          "Complaint Update",
+          `Your complaint (ID: ${id}) is now under investigation`,
+          "complaint_investigating",
+          "student",
+          id
         );
       }
 
       toast({
         title: "Complaint assigned",
-        description: `Complaint has been assigned to ${assignedToName}`,
+        description: `Complaint has been assigned to investigator`,
       });
     } catch (error) {
       toast({

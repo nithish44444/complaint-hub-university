@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthContext";
@@ -9,8 +10,9 @@ type Notification = {
   message: string;
   timestamp: string;
   read: boolean;
-  type: "login" | "complaint_resolved" | "complaint_submitted" | "system";
+  type: "complaint_resolved" | "complaint_submitted" | "complaint_investigating" | "system";
   targetRole?: "student" | "admin" | "investigator" | "all";
+  complaintId?: string; // Added to store the complaint ID for tracking
 };
 
 type NotificationContextType = {
@@ -21,7 +23,8 @@ type NotificationContextType = {
     title: string,
     message: string,
     type: Notification["type"],
-    targetRole?: Notification["targetRole"]
+    targetRole?: Notification["targetRole"],
+    complaintId?: string
   ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -66,7 +69,8 @@ export function NotificationProvider({
     title: string,
     message: string,
     type: Notification["type"],
-    targetRole: Notification["targetRole"] = "all"
+    targetRole: Notification["targetRole"] = "all",
+    complaintId?: string
   ) => {
     const newNotification: Notification = {
       id: `n-${Date.now()}`,
@@ -76,6 +80,7 @@ export function NotificationProvider({
       read: false,
       type,
       targetRole,
+      complaintId,
     };
 
     const updatedNotifications = [newNotification, ...notifications];

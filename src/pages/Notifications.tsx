@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import MainLayout from "@/components/layout/MainLayout";
@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Bell, Check, LogIn, FileText, Trash2 } from "lucide-react";
+import { Bell, Check, FileText, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -51,16 +51,16 @@ const NotificationsPage = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "login":
-        return (
-          <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-            <LogIn className="h-5 w-5 text-blue-600" />
-          </div>
-        );
       case "complaint_resolved":
         return (
           <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-            <Check className="h-5 w-5 text-green-600" />
+            <CheckCircle className="h-5 w-5 text-green-600" />
+          </div>
+        );
+      case "complaint_investigating":
+        return (
+          <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
+            <AlertCircle className="h-5 w-5 text-blue-600" />
           </div>
         );
       case "complaint_submitted":
@@ -143,6 +143,19 @@ const NotificationsPage = () => {
                       <p className="mt-1 text-sm text-muted-foreground">
                         {notification.message}
                       </p>
+                      
+                      {/* Add link to complaint if complaint ID exists */}
+                      {notification.complaintId && (
+                        <div className="mt-1">
+                          <Link 
+                            to={`/complaints/${notification.complaintId}`} 
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            View Complaint Details
+                          </Link>
+                        </div>
+                      )}
+                      
                       <div className="flex gap-2 mt-2">
                         {!notification.read && (
                           <Button

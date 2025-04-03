@@ -38,8 +38,8 @@ const App = () => {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <NotificationProvider>
-            <AuthProvider>
+          <AuthProvider>
+            <NotificationProvider>
               <ComplaintProvider>
                 <Toaster />
                 <Sonner />
@@ -61,8 +61,8 @@ const App = () => {
                   </Routes>
                 </BrowserRouter>
               </ComplaintProvider>
-            </AuthProvider>
-          </NotificationProvider>
+            </NotificationProvider>
+          </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>

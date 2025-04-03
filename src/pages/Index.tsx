@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Shield, FileText, BarChart, ChevronRight, ArrowRight } from "lucide-react";
+import { CheckCircle, Shield, FileText, BarChart, ChevronRight, ArrowRight, GraduationCap, BookOpen, Scale } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import MainLayout from "@/components/layout/MainLayout";
 
@@ -36,6 +36,9 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-university-navy/5 to-university-gold/5 pointer-events-none" />
         <div className="container px-4 md:px-6 relative">
           <div className="flex flex-col items-center space-y-6 text-center mb-16">
+            <div className="inline-block p-2 bg-university-gold/10 rounded-full mb-4">
+              <GraduationCap className="h-8 w-8 text-university-gold" />
+            </div>
             <div className="space-y-4">
               <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-university-navy to-university-darkBlue">
                 University Disciplinary Committee
@@ -123,16 +126,40 @@ const Index = () => {
             </div>
           </div>
           
-          {!user && (
-            <div className="mt-20 text-center">
-              <Button className="bg-university-navy hover:bg-university-darkBlue text-lg group" size="lg" asChild>
-                <Link to="/register">
-                  Get Started Today
-                  <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
+          <div className="mt-20 bg-university-navy/5 py-12 px-6 rounded-2xl">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="md:w-2/3">
+                <h3 className="text-2xl font-bold mb-4">Committed to Campus Justice</h3>
+                <p className="text-muted-foreground mb-6">
+                  Our disciplinary committee is dedicated to maintaining a fair, safe, and respectful 
+                  campus environment through transparent complaint resolution processes.
+                </p>
+                {!user && (
+                  <Button className="bg-university-navy hover:bg-university-darkBlue text-lg group" size="lg" asChild>
+                    <Link to="/register">
+                      Get Started Today
+                      <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+              <div className="md:w-1/3 flex justify-center">
+                <div className="h-24 w-24 rounded-full bg-university-gold/20 flex items-center justify-center">
+                  <Scale className="h-12 w-12 text-university-gold" />
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+          
+          <footer className="mt-20 pt-10 border-t text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <BookOpen className="h-5 w-5 text-university-navy" />
+              <span className="font-medium text-university-darkBlue">University Disciplinary Committee</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              © 2025 University Disciplinary Committee. All Rights Reserved.
+            </p>
+          </footer>
         </div>
       </section>
     </MainLayout>

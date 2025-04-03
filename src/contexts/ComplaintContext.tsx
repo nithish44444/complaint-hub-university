@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthContext";
@@ -251,11 +252,19 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       setComplaints(updatedComplaints);
       localStorage.setItem("udc_complaints", JSON.stringify(updatedComplaints));
 
-      // Add notification for admins and investigators
+      // Add notification for admins and investigators only
       addNotification(
         "New Complaint Submitted",
         `${user.name} has submitted a new complaint: "${title}"`,
-        "complaint_submitted"
+        "complaint_submitted",
+        "admin" // Target admins and investigators
+      );
+      
+      addNotification(
+        "New Complaint Submitted",
+        `${user.name} has submitted a new complaint: "${title}"`,
+        "complaint_submitted",
+        "investigator" // Target admins and investigators
       );
 
       toast({
@@ -316,13 +325,37 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       setComplaints(updatedComplaints);
       localStorage.setItem("udc_complaints", JSON.stringify(updatedComplaints));
 
-      // If the complaint is resolved, create a notification
-      if (status === "resolved" && complaintToUpdate) {
+      // If the complaint is updated, create notifications based on status and roles
+      if (complaintToUpdate) {
+        // General update notification for the student who submitted the complaint
+        const statusMessage = status === "resolved" 
+          ? "has been resolved" 
+          : status === "investigating" 
+          ? "is now under investigation" 
+          : status === "rejected" 
+          ? "has been rejected" 
+          : "has been updated";
+
+        // Notification for the student who submitted the complaint
         addNotification(
-          "Complaint Resolved",
-          `Complaint "${complaintToUpdate.title}" has been resolved.`,
-          "complaint_resolved"
+          `Complaint ${statusMessage}`,
+          `Your complaint "${complaintToUpdate.title}" ${statusMessage}${resolution ? `: ${resolution}` : ""}`,
+          status === "resolved" ? "complaint_resolved" : "complaint_submitted",
+          "student"
         );
+
+        // For staff (admins and investigators)
+        const staffMessage = `Complaint "${complaintToUpdate.title}" by ${complaintToUpdate.submittedByName} ${statusMessage}`;
+        
+        // Only notify other staff if the current user is staff
+        if (user?.role === "admin" || user?.role === "investigator") {
+          addNotification(
+            `Complaint ${statusMessage}`,
+            staffMessage,
+            status === "resolved" ? "complaint_resolved" : "complaint_submitted",
+            user?.role === "admin" ? "investigator" : "admin"
+          );
+        }
       }
 
       toast({
@@ -351,6 +384,7 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const currentDate = new Date().toISOString();
+      let complaintToUpdate: Complaint | undefined;
 
       const updatedComplaints = complaints.map((complaint) => {
         if (complaint.id === id) {
@@ -362,7 +396,7 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
             updatedBy: user?.id
           };
           
-          const updatedComplaint: Complaint = {
+          complaintToUpdate = {
             ...complaint,
             assignedTo,
             assignedToName,
@@ -373,13 +407,32 @@ export function ComplaintProvider({ children }: { children: React.ReactNode }) {
               trackingUpdate
             ]
           };
-          return updatedComplaint;
+          return complaintToUpdate;
         }
         return complaint;
       });
 
       setComplaints(updatedComplaints);
       localStorage.setItem("udc_complaints", JSON.stringify(updatedComplaints));
+
+      // Send notification to the assigned investigator
+      if (complaintToUpdate) {
+        // Notification for the assigned investigator
+        addNotification(
+          "Complaint Assigned",
+          `You have been assigned to investigate complaint: "${complaintToUpdate.title}"`,
+          "complaint_submitted",
+          "investigator"
+        );
+
+        // Notification for the student who submitted the complaint
+        addNotification(
+          "Complaint Under Investigation",
+          `Your complaint "${complaintToUpdate.title}" is now under investigation by ${assignedToName}`,
+          "complaint_submitted",
+          "student"
+        );
+      }
 
       toast({
         title: "Complaint assigned",

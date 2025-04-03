@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -53,7 +52,6 @@ const NavItem = ({
 const Sidebar = () => {
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
-  const location = useLocation();
 
   if (!user) return null;
 

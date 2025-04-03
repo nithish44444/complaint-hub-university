@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "./AuthContext";
 
 type Notification = {
   id: string;
@@ -9,15 +10,18 @@ type Notification = {
   timestamp: string;
   read: boolean;
   type: "login" | "complaint_resolved" | "complaint_submitted" | "system";
+  targetRole?: "student" | "admin" | "investigator" | "all";
 };
 
 type NotificationContextType = {
   notifications: Notification[];
+  userNotifications: Notification[];
   unreadCount: number;
   addNotification: (
     title: string,
     message: string,
-    type: Notification["type"]
+    type: Notification["type"],
+    targetRole?: Notification["targetRole"]
   ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -36,6 +40,7 @@ export function NotificationProvider({
 }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Load notifications from localStorage
@@ -45,12 +50,23 @@ export function NotificationProvider({
     }
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Filter notifications based on user role
+  const userNotifications = user
+    ? notifications.filter(
+        (notification) =>
+          notification.targetRole === "all" ||
+          notification.targetRole === undefined ||
+          notification.targetRole === user.role
+      )
+    : [];
+
+  const unreadCount = userNotifications.filter((n) => !n.read).length;
 
   const addNotification = (
     title: string,
     message: string,
-    type: Notification["type"]
+    type: Notification["type"],
+    targetRole: Notification["targetRole"] = "all"
   ) => {
     const newNotification: Notification = {
       id: `n-${Date.now()}`,
@@ -59,6 +75,7 @@ export function NotificationProvider({
       timestamp: new Date().toISOString(),
       read: false,
       type,
+      targetRole,
     };
 
     const updatedNotifications = [newNotification, ...notifications];
@@ -68,11 +85,17 @@ export function NotificationProvider({
       JSON.stringify(updatedNotifications)
     );
 
-    // Show toast for new notification
-    toast({
-      title,
-      description: message,
-    });
+    // Only show toast for notifications relevant to current user
+    if (
+      !user ||
+      targetRole === "all" ||
+      targetRole === user.role
+    ) {
+      toast({
+        title,
+        description: message,
+      });
+    }
 
     return newNotification;
   };
@@ -122,6 +145,7 @@ export function NotificationProvider({
     <NotificationContext.Provider
       value={{
         notifications,
+        userNotifications,
         unreadCount,
         addNotification,
         markAsRead,

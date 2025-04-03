@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import MainLayout from "@/components/layout/MainLayout";
 import {
   Card,
@@ -15,120 +16,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-type Notification = {
-  id: string;
-  title: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
-  type: "login" | "complaint_resolved" | "complaint_submitted" | "system";
-};
-
 const NotificationsPage = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-
-  useEffect(() => {
-    // Load notifications from localStorage
-    const loadNotifications = () => {
-      const storedNotifications = localStorage.getItem("udc_notifications");
-      if (storedNotifications) {
-        setNotifications(JSON.parse(storedNotifications));
-      } else {
-        // Set demo notifications if none exist
-        const demoNotifications: Notification[] = [
-          {
-            id: "n1",
-            title: "New User Login",
-            message: "Student User has logged in to the system.",
-            timestamp: new Date(Date.now() - 25 * 60000).toISOString(),
-            read: false,
-            type: "login",
-          },
-          {
-            id: "n2",
-            title: "Complaint Resolved",
-            message:
-              "Complaint #c-003 has been resolved by Investigator User.",
-            timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
-            read: true,
-            type: "complaint_resolved",
-          },
-          {
-            id: "n3",
-            title: "New Complaint Submitted",
-            message:
-              "Student User has submitted a new complaint regarding harassment.",
-            timestamp: new Date(Date.now() - 24 * 3600000).toISOString(),
-            read: true,
-            type: "complaint_submitted",
-          },
-          {
-            id: "n4",
-            title: "System Maintenance",
-            message:
-              "The system will undergo maintenance tonight from 2-4 AM.",
-            timestamp: new Date(Date.now() - 48 * 3600000).toISOString(),
-            read: true,
-            type: "system",
-          },
-        ];
-        setNotifications(demoNotifications);
-        localStorage.setItem(
-          "udc_notifications",
-          JSON.stringify(demoNotifications)
-        );
-      }
-    };
-
-    loadNotifications();
-  }, []);
+  const { 
+    userNotifications, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification, 
+    clearAllNotifications,
+    unreadCount 
+  } = useNotifications();
 
   // Redirect if not logged in
   if (!user) {
     return <Navigate to="/login" />;
   }
-
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map((notification) => ({
-      ...notification,
-      read: true,
-    }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem(
-      "udc_notifications",
-      JSON.stringify(updatedNotifications)
-    );
-  };
-
-  const markAsRead = (id: string) => {
-    const updatedNotifications = notifications.map((notification) =>
-      notification.id === id
-        ? { ...notification, read: true }
-        : notification
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem(
-      "udc_notifications",
-      JSON.stringify(updatedNotifications)
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    const updatedNotifications = notifications.filter(
-      (notification) => notification.id !== id
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem(
-      "udc_notifications",
-      JSON.stringify(updatedNotifications)
-    );
-  };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.setItem("udc_notifications", JSON.stringify([]));
-  };
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -176,8 +78,6 @@ const NotificationsPage = () => {
     }
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -201,17 +101,17 @@ const NotificationsPage = () => {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>All Notifications</CardTitle>
+          <CardTitle>Your Notifications</CardTitle>
           <CardDescription>
-            {notifications.length === 0
+            {userNotifications.length === 0
               ? "No notifications"
-              : `You have ${notifications.length} notification${
-                  notifications.length !== 1 ? "s" : ""
+              : `You have ${userNotifications.length} notification${
+                  userNotifications.length !== 1 ? "s" : ""
                 }`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {notifications.length === 0 ? (
+          {userNotifications.length === 0 ? (
             <div className="text-center py-8">
               <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
@@ -220,7 +120,7 @@ const NotificationsPage = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {notifications.map((notification) => (
+              {userNotifications.map((notification) => (
                 <div key={notification.id}>
                   <div className="flex items-start gap-4">
                     {getNotificationIcon(notification.type)}

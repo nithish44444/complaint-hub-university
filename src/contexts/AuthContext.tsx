@@ -1,7 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useNotifications } from "./NotificationContext";
 
 type User = {
   id: string;
@@ -20,6 +19,19 @@ type AuthContextType = {
   updateProfile: (userData: User) => Promise<void>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => void;
+  addLoginNotification?: (userName: string, userEmail: string) => void;
+};
+
+// This will be set by the NotificationProvider after it's initialized
+let addNotificationFunction: ((
+  title: string,
+  message: string,
+  type: string,
+  targetRole?: string
+) => void) | undefined;
+
+export const setAddNotificationFunction = (fn: typeof addNotificationFunction) => {
+  addNotificationFunction = fn;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,7 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { addNotification } = useNotifications();
 
   useEffect(() => {
     // Check if user is logged in
@@ -38,6 +49,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setIsLoading(false);
   }, []);
+
+  const addLoginNotification = (userName: string, userEmail: string) => {
+    if (addNotificationFunction) {
+      addNotificationFunction(
+        `${userName} Logged In`,
+        `${userName} (${userEmail}) has logged into the system.`,
+        "login",
+        undefined
+      );
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -57,11 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("udc_user", JSON.stringify(adminUser));
         
         // Create login notification for admins and investigators
-        addNotification(
-          "Admin User Logged In",
-          `Admin User (admin@university.edu) has logged into the system.`,
-          "login"
-        );
+        if (addNotificationFunction) {
+          addNotificationFunction(
+            "Admin User Logged In",
+            `Admin User (admin@university.edu) has logged into the system.`,
+            "login",
+            undefined
+          );
+        }
         
         toast({
           title: "Logged in successfully",
@@ -81,11 +106,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("udc_user", JSON.stringify(studentUser));
         
         // Create login notification for admins and investigators
-        addNotification(
-          "Student User Logged In",
-          `Student User (student@university.edu) has logged into the system.`,
-          "login"
-        );
+        if (addNotificationFunction) {
+          addNotificationFunction(
+            "Student User Logged In",
+            `Student User (student@university.edu) has logged into the system.`,
+            "login",
+            undefined
+          );
+        }
         
         toast({
           title: "Logged in successfully",
@@ -105,11 +133,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("udc_user", JSON.stringify(investigatorUser));
         
         // Create login notification for admins and investigators
-        addNotification(
-          "Investigator User Logged In",
-          `Investigator User (investigator@university.edu) has logged into the system.`,
-          "login"
-        );
+        if (addNotificationFunction) {
+          addNotificationFunction(
+            "Investigator User Logged In",
+            `Investigator User (investigator@university.edu) has logged into the system.`,
+            "login",
+            undefined
+          );
+        }
         
         toast({
           title: "Logged in successfully",
@@ -141,11 +172,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("udc_user", JSON.stringify(userToLogin));
           
           // Create login notification for admins and investigators
-          addNotification(
-            `${userToLogin.name} Logged In`,
-            `${userToLogin.name} (${userToLogin.email}) has logged into the system.`,
-            "login"
-          );
+          if (addNotificationFunction) {
+            addNotificationFunction(
+              `${userToLogin.name} Logged In`,
+              `${userToLogin.name} (${userToLogin.email}) has logged into the system.`,
+              "login",
+              undefined
+            );
+          }
           
           toast({
             title: "Logged in successfully",
@@ -333,7 +367,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register, 
       updateProfile,
       updatePassword,
-      logout 
+      logout,
+      addLoginNotification
     }}>
       {children}
     </AuthContext.Provider>

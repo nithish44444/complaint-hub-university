@@ -1,7 +1,7 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthContext";
+import { setAddNotificationFunction } from "./AuthContext";
 
 type Notification = {
   id: string;
@@ -99,6 +99,11 @@ export function NotificationProvider({
 
     return newNotification;
   };
+
+  // Register the addNotification function with AuthContext
+  useEffect(() => {
+    setAddNotificationFunction(addNotification);
+  }, []);
 
   const markAsRead = (id: string) => {
     const updatedNotifications = notifications.map((notification) =>
